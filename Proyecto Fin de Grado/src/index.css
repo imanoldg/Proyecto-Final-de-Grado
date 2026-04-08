@@ -1,1 +1,186 @@
 @import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   TAILWIND v4 — @theme inline
+───────────────────────────────────────────────────────────────*/
+@theme inline {
+  --color-background:           var(--background);
+  --color-foreground:           var(--foreground);
+
+  --color-card:                 var(--card);
+  --color-card-foreground:      var(--card-foreground);
+
+  --color-popover:              var(--popover);
+  --color-popover-foreground:   var(--popover-foreground);
+
+  --color-primary:              var(--primary);
+  --color-primary-foreground:   var(--primary-foreground);
+
+  --color-secondary:            var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted:                var(--muted);
+  --color-muted-foreground:     var(--muted-foreground);
+
+  --color-accent:               var(--accent);
+  --color-accent-foreground:    var(--accent-foreground);
+
+  --color-destructive:          var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-success:              var(--success);
+  --color-success-foreground:   var(--success-foreground);
+
+  --color-border:               var(--border);
+  --color-input:                var(--input);
+  --color-ring:                 var(--ring);
+
+  --color-energy:               var(--energy);
+  --color-achievement:          var(--achievement);
+
+  --font-sans:    var(--font-body);
+  --font-display: var(--font-heading);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 12px);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PALETA PRINCIPAL (dark-first)
+   Fondo oscuro, rojo intenso, naranja y dorado como acentos
+───────────────────────────────────────────────────────────────*/
+:root {
+  /* Fondo y superficies */
+  --background:              #0C0C11;
+  --foreground:              #F4F4F8;
+
+  --card:                    #131318;
+  --card-foreground:         #F4F4F8;
+
+  --popover:                 #1C1C23;
+  --popover-foreground:      #F4F4F8;
+
+  /* Rojo principal */
+  --primary:                 #E8374E;
+  --primary-hover:           #C9162D;
+  --primary-foreground:      #F4F4F8;
+
+  /* Superficie secundaria */
+  --secondary:               #1C1C23;
+  --secondary-foreground:    #F4F4F8;
+
+  /* Muted */
+  --muted:                   #1C1C23;
+  --muted-foreground:        #8E8E9A;
+
+  /* Accent — naranja energía */
+  --accent:                  #1C1C23;
+  --accent-foreground:       #F96B2E;
+
+  /* Estados */
+  --destructive:             #E8374E;
+  --destructive-foreground:  #F4F4F8;
+
+  --success:                 #22C55E;
+  --success-foreground:      #0C0C11;
+
+  /* Colores de marca extra */
+  --energy:                  #F96B2E;    /* naranja — intensidad */
+  --achievement:             #F9AF2E;    /* dorado  — logros     */
+
+  /* Bordes */
+  --border:                  rgba(244, 244, 248, 0.07);
+  --input:                   rgba(244, 244, 248, 0.10);
+  --ring:                    #E8374E;
+
+  /* Misc */
+  --radius: 0.5rem;
+
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-heading: 'DM Serif Display', Georgia, serif;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MODO CLARO (fallback por si se activa)
+───────────────────────────────────────────────────────────────*/
+.light {
+  --background:              #F7F7FA;
+  --foreground:              #0C0C11;
+
+  --card:                    #FFFFFF;
+  --card-foreground:         #0C0C11;
+
+  --popover:                 #FFFFFF;
+  --popover-foreground:      #0C0C11;
+
+  --primary:                 #E8374E;
+  --primary-hover:           #C9162D;
+  --primary-foreground:      #FFFFFF;
+
+  --secondary:               #F0F0F5;
+  --secondary-foreground:    #0C0C11;
+
+  --muted:                   #F0F0F5;
+  --muted-foreground:        #6B6B7A;
+
+  --accent:                  #FFF0EC;
+  --accent-foreground:       #F96B2E;
+
+  --destructive:             #E8374E;
+  --destructive-foreground:  #FFFFFF;
+
+  --success:                 #16A34A;
+  --success-foreground:      #FFFFFF;
+
+  --energy:                  #F96B2E;
+  --achievement:             #F9AF2E;
+
+  --border:                  rgba(12, 12, 17, 0.10);
+  --input:                   rgba(12, 12, 17, 0.12);
+  --ring:                    #E8374E;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BASE GLOBAL
+───────────────────────────────────────────────────────────────*/
+*, *::before, *::after {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   UTILIDADES DE MARCA
+   Uso: className="brand-gradient"  /  className="gradient-text"
+───────────────────────────────────────────────────────────────*/
+.brand-gradient {
+  background: linear-gradient(135deg, #E8374E 0%, #C9162D 100%);
+}
+
+.energy-gradient {
+  background: linear-gradient(135deg, #F96B2E 0%, #F9AF2E 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #E8374E, #F96B2E);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

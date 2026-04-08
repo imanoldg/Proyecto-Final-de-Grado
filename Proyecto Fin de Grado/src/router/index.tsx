@@ -5,6 +5,7 @@ import ClientLayout from '../layouts/ClientLayout';
 import TrainerDashboard from '../pages/trainer/DashboardPage.tsx';
 import ClientsPage from '../pages/trainer/ClientsPage.tsx';
 import RoutinesPage from '../pages/trainer/RoutinesPage.tsx';
+import RoutineDetailPage from '../pages/trainer/RoutineDetailPage.tsx';  // ← NUEVO
 import ExercisesPage from '../pages/trainer/ExercisesPage.tsx';
 import InventoryPage from '../pages/trainer/InventoryPage.tsx';
 import OrdersPage from '../pages/trainer/OrdersPage.tsx';
@@ -23,29 +24,38 @@ export const router = createBrowserRouter([
 
   {
     path: '/trainer',
-    element: <ProtectedRoute allowedRoles={['trainer']}><TrainerLayout /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute allowedRoles={['trainer']}>
+        <TrainerLayout />
+      </ProtectedRoute>
+    ),
     children: [
-      { index: true,          element: <Navigate to="dashboard" replace /> },
-      { path: 'dashboard',    element: <TrainerDashboard /> },
-      { path: 'clients',      element: <ClientsPage /> },
-      { path: 'routines',     element: <RoutinesPage /> },
-      { path: 'exercises',    element: <ExercisesPage /> },
-      { path: 'inventory',    element: <InventoryPage /> },
-      { path: 'orders',       element: <OrdersPage /> },
-    ]
+      { index: true,               element: <Navigate to="dashboard" replace /> },
+      { path: 'dashboard',         element: <TrainerDashboard /> },
+      { path: 'clients',           element: <ClientsPage /> },
+      { path: 'routines',          element: <RoutinesPage /> },
+      { path: 'routines/:id',      element: <RoutineDetailPage /> },   // ← NUEVO
+      { path: 'exercises',         element: <ExercisesPage /> },
+      { path: 'inventory',         element: <InventoryPage /> },
+      { path: 'orders',            element: <OrdersPage /> },
+    ],
   },
 
   {
     path: '/client',
-    element: <ProtectedRoute allowedRoles={['client']}><ClientLayout /></ProtectedRoute>,
+    element: (
+      <ProtectedRoute allowedRoles={['client']}>
+        <ClientLayout />
+      </ProtectedRoute>
+    ),
     children: [
-      { index: true,            element: <Navigate to="dashboard" replace /> },
-      { path: 'dashboard',      element: <ClientDashboard /> },
-      { path: 'routines',       element: <MyRoutinesPage /> },
-      { path: 'nutrition',      element: <NutritionPage /> },
-      { path: 'appointments',   element: <AppointmentsPage /> },
-      { path: 'orders',         element: <ClientOrdersPage /> },
-    ]
+      { index: true,               element: <Navigate to="dashboard" replace /> },
+      { path: 'dashboard',         element: <ClientDashboard /> },
+      { path: 'routines',          element: <MyRoutinesPage /> },
+      { path: 'nutrition',         element: <NutritionPage /> },
+      { path: 'appointments',      element: <AppointmentsPage /> },
+      { path: 'orders',            element: <ClientOrdersPage /> },
+    ],
   },
 
   { path: '*', element: <Navigate to="/login" replace /> },

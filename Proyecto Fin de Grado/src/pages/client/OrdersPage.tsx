@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getInventory } from '../../api/inventory.api';
 import { getOrders, createOrder } from '../../api/orders.api';
 import {
-  ShoppingBag, Plus, Minus, Trash2, Loader2, ShoppingCart, X,
+  ShoppingBag, Plus, Minus, Trash2, Loader2, ShoppingCart, X, Package,
 } from 'lucide-react';
 import type { InventoryItem, Order, OrderStatus } from '../../types';
 
@@ -18,10 +18,11 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; cls: string }> = {
 
 export default function ClientOrdersPage() {
   const qc = useQueryClient();
-  const [cart, setCart]         = useState<CartItem[]>([]);
-  const [showCart, setShowCart] = useState(false);
-  const [notes, setNotes]       = useState('');
-  const [tab, setTab]           = useState<'shop' | 'history'>('shop');
+  const [cart, setCart]                   = useState<CartItem[]>([]);
+  const [showCart, setShowCart]           = useState(false);
+  const [notes, setNotes]                 = useState('');
+  const [tab, setTab]                     = useState<'shop' | 'history'>('shop');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ['inventory'],
@@ -83,6 +84,7 @@ export default function ClientOrdersPage() {
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -148,40 +150,19 @@ export default function ClientOrdersPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {product.stock} en stock
-                    </p>
+                    <p className="text-xs text-muted-foreground">{product.stock} en stock</p>
                   </div>
-
                   <div className="flex items-center justify-between mt-auto">
-                    <span className="text-base font-semibold tabular-nums">
-                      {product.price.toFixed(2)} €
-                    </span>
-
+                    <span className="text-base font-semibold tabular-nums">{product.price.toFixed(2)} €</span>
                     {inCart ? (
                       <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => updateQty(product.id, -1)}
-                          className="p-1 rounded border border-border hover:bg-accent transition-colors"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
+                        <button onClick={() => updateQty(product.id, -1)} className="p-1 rounded border border-border hover:bg-accent transition-colors"><Minus className="w-3.5 h-3.5" /></button>
                         <span className="w-7 text-center text-sm tabular-nums">{inCart.qty}</span>
-                        <button
-                          onClick={() => updateQty(product.id, 1)}
-                          disabled={inCart.qty >= product.stock}
-                          className="p-1 rounded border border-border hover:bg-accent disabled:opacity-40 transition-colors"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                        <button onClick={() => updateQty(product.id, 1)} disabled={inCart.qty >= product.stock} className="p-1 rounded border border-border hover:bg-accent disabled:opacity-40 transition-colors"><Plus className="w-3.5 h-3.5" /></button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => addToCart(product)}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        Añadir
+                      <button onClick={() => addToCart(product)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                        <Plus className="w-3.5 h-3.5" />Añadir
                       </button>
                     )}
                   </div>
@@ -199,7 +180,7 @@ export default function ClientOrdersPage() {
         ) : orders.length === 0 ? (
           <div className="flex flex-col items-center py-12 gap-3">
             <ShoppingBag className="w-9 h-9 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Aún no has realizado ningún pedido</p>
+            <p className="text-sm text-muted-foreground">AÃºn no has realizado ningÃºn pedido</p>
           </div>
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -210,6 +191,7 @@ export default function ClientOrdersPage() {
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Fecha</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground">Total</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -217,17 +199,23 @@ export default function ClientOrdersPage() {
                   <tr key={order.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 text-muted-foreground tabular-nums">#{order.id}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                      {order.created_at
-                        ? new Date(order.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : '—'}
+                      {order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : 'â€”'}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium">
-                      {order.total.toFixed(2)} €
-                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums font-medium">{order.total.toFixed(2)} €</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_CONFIG[order.status].cls}`}>
                         {STATUS_CONFIG[order.status].label}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="text-xs px-2.5 py-1.5 border border-border rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors whitespace-nowrap"
+                      >
+                        Ver más
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -237,21 +225,86 @@ export default function ClientOrdersPage() {
         )
       )}
 
-      {/* Cart sidebar modal */}
+      {/* Modal detalle del pedido */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0" onClick={() => setSelectedOrder(null)} />
+          <div className="relative w-full max-w-md bg-rgb(18, 18, 23) border border-border rounded-xl shadow-xl">
+
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h2 className="font-semibold">Pedido #{selectedOrder.id}</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {selectedOrder.createdAt &&
+                    new Date(selectedOrder.createdAt).toLocaleDateString('es-ES', {
+                      day: 'numeric', month: 'long', year: 'numeric',
+                    })}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 space-y-2 max-h-72 overflow-y-auto">
+              {!selectedOrder.items || selectedOrder.items.length === 0 ? (
+                <div className="flex flex-col items-center py-8 gap-2 text-muted-foreground">
+                  <Package className="w-7 h-7 opacity-40" />
+                  <p className="text-sm">Sin productos</p>
+                </div>
+              ) : (
+                selectedOrder.items.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">
+                        {item.product?.name ?? `Producto #${item.inventory_item_id}`}
+                      </p>
+                      {item.product?.category && (
+                        <p className="text-xs text-muted-foreground">{item.product.category}</p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0 ml-4">
+                      <p className="text-sm tabular-nums font-medium">
+                        {(item.unit_price * item.quantity).toFixed(2)} €
+                      </p>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        {item.quantity} x {item.unit_price.toFixed(2)} €
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="px-5 py-4 border-t border-border space-y-2">
+              {selectedOrder.notes && (
+                <p className="text-xs text-muted-foreground italic">Nota: {selectedOrder.notes}</p>
+              )}
+              <div className="flex items-center justify-between font-semibold">
+                <span className="text-sm">Total</span>
+                <span className="tabular-nums">{selectedOrder.total.toFixed(2)} €</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Cart sidebar */}
       {showCart && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setShowCart(false)} />
-          <div className="relative flex flex-col w-full max-w-sm bg-card h-full shadow-xl">
-            {/* Cart header */}
+          <div className="fixed inset-0" onClick={() => setShowCart(false)} />
+          <div className="relative flex flex-col w-full max-w-sm bg-white dark:bg-zinc-900 h-full shadow-xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <h2 className="font-semibold">Carrito ({cartCount})</h2>
               <button onClick={() => setShowCart(false)}><X className="w-4 h-4" /></button>
             </div>
-
-            {/* Cart items */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {cart.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Carrito vacío</p>
+                <p className="text-sm text-muted-foreground text-center py-8">Carrito vací­o</p>
               ) : (
                 cart.map(ci => (
                   <div key={ci.item.id} className="flex items-center gap-3">
@@ -269,8 +322,6 @@ export default function ClientOrdersPage() {
                 ))
               )}
             </div>
-
-            {/* Cart footer */}
             {cart.length > 0 && (
               <div className="px-5 py-4 border-t border-border space-y-3">
                 <div>
@@ -298,6 +349,7 @@ export default function ClientOrdersPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

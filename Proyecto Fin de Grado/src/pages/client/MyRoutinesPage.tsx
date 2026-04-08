@@ -1,61 +1,196 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getMyAssignments } from '../../api/routines.api.ts';
-import { Dumbbell, Loader2 } from 'lucide-react';
-import type { Assignment } from '../../types';
+import { Dumbbell, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import type { Routine } from '../../types/index.ts';
+
+const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const DAYS_FULL = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 export default function MyRoutinesPage() {
-  const { data: assignments = [], isLoading } = useQuery({ queryKey: ['my-assignments'], queryFn: getMyAssignments });
+  const { data: routines = [], isLoading } = useQuery<Routine[]>({
+    queryKey: ['my-assignments'],
+    queryFn: getMyAssignments,
+  });
 
-  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>;
+  const [expandedRoutine, setExpandedRoutine] = useState<number | null>(null);
+  const [activeDay, setActiveDay]             = useState<Record<number, number>>({});
+
+  const toggleRoutine = (id: number) =>
+    setExpandedRoutine((prev) => (prev === id ? null : id));
+
+  const getDayForRoutine = (routineId: number) =>
+    activeDay[routineId] ?? 0;
+
+  const setDayForRoutine = (routineId: number, day: number) =>
+    setActiveDay((prev) => ({ ...prev, [routineId]: day }));
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Mis rutinas</h1>
-        <p className="text-sm text-muted-foreground">{assignments.filter(a => a.active).length} activas</p>
-      </div>
 
-      {assignments.length === 0 ? (
-        <div className="bg-card border border-border rounded-xl flex flex-col items-center py-12 gap-3">
-          <Dumbbell className="w-9 h-9 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Tu entrenador aún no te ha asignado ninguna rutina</p>
+      {/* ── Header ── */}
+      <section className="rounded-lg border border-border bg-card px-5 py-5 md:px-6 md:py-6">
+        <div className="space-y-1.5">
+          <span className="font-label text-xs text-energy">Entrenamiento</span>
+          <h1 className="font-display text-4xl leading-none tracking-[0.04em] md:text-5xl">
+            Mis rutinas
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {routines.length} rutina{routines.length !== 1 ? 's' : ''} asignada{routines.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+      </section>
+
+      {/* ── Lista ── */}
+      {routines.length === 0 ? (
+        <div className="rounded-md border border-dashed border-border bg-card px-4 py-14 text-center">
+          <Dumbbell className="mx-auto mb-3 h-8 w-8 text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground">
+            Tu entrenador aún no te ha asignado ninguna rutina
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {assignments.map((a: Assignment) => (
-            <div key={a.id} className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="font-semibold">{a.routine?.name ?? `Rutina #${a.routine_id}`}</h2>
-                  {a.routine?.description && <p className="text-sm text-muted-foreground mt-0.5">{a.routine.description}</p>}
-                  {a.start_date && <p className="text-xs text-muted-foreground mt-1">Desde {new Date(a.start_date).toLocaleDateString('es-ES')}</p>}
-                </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${a.active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{a.active ? 'Activa' : 'Inactiva'}</span>
-              </div>
+        <div className="space-y-3">
+          {routines.map((r) => {
+            const isOpen  = expandedRoutine === r.id;
+            const selDay  = getDayForRoutine(r.id);
+            const allRE   = r.routine_exercises ?? [];
+            const dayRE   = allRE.filter((re) => re.day_of_week === selDay);
 
-              {a.routine?.exercises && a.routine.exercises.length > 0 ? (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Ejercicios</p>
-                  <div className="space-y-2">
-                    {a.routine.exercises.map((re, i) => (
-                      <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-medium shrink-0">{i + 1}</span>
-                          <div>
-                            <p className="text-sm font-medium">{re.exercise?.name ?? `Ejercicio #${re.exercise_id}`}</p>
-                            {re.exercise?.muscle_group && <p className="text-xs text-muted-foreground">{re.exercise.muscle_group}</p>}
-                          </div>
-                        </div>
-                        {re.sets && re.reps && <p className="text-sm tabular-nums text-muted-foreground">{re.sets} × {re.reps}</p>}
-                      </div>
-                    ))}
+            // días que tienen al menos un ejercicio
+            const daysWithEx = new Set(
+              allRE
+                .filter((re) => re.day_of_week !== null && re.day_of_week !== undefined)
+                .map((re) => re.day_of_week as number)
+            );
+
+            return (
+              <article
+                key={r.id}
+                className="rounded-lg border border-border bg-card"
+              >
+                {/* ─ Cabecera de la rutina ─ */}
+                <button
+                  onClick={() => toggleRoutine(r.id)}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                >
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate font-medium text-foreground">{r.name}</p>
+                      <span className="shrink-0 rounded-full border border-energy/15 bg-energy/10 px-2.5 py-0.5 font-label text-[10px] text-energy">
+                        Activa
+                      </span>
+                    </div>
+                    {r.description && (
+                      <p className="line-clamp-1 text-xs text-muted-foreground">{r.description}</p>
+                    )}
+                    {/* mini barra días */}
+                    <div className="flex gap-1 pt-0.5">
+                      {[0,1,2,3,4,5,6].map((d) => (
+                        <span
+                          key={d}
+                          className={[
+                            'flex h-4 w-5 items-center justify-center rounded font-label text-[9px]',
+                            daysWithEx.has(d)
+                              ? 'bg-energy/15 text-energy'
+                              : 'bg-secondary text-muted-foreground/30',
+                          ].join(' ')}
+                        >
+                          {DAYS[d]}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Esta rutina no tiene ejercicios añadidos aún</p>
-              )}
-            </div>
-          ))}
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="rounded-full border border-energy/15 bg-energy/10 px-2.5 py-1 font-label text-[10px] text-energy">
+                      {allRE.length} ejercicios · {daysWithEx.size} días
+                    </span>
+                    {isOpen
+                      ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    }
+                  </div>
+                </button>
+
+                {/* ─ Detalle expandido ─ */}
+                {isOpen && (
+                  <div className="border-t border-border px-5 pb-5 pt-4">
+
+                    {/* tabs días */}
+                    <div className="mb-4 flex gap-1 overflow-x-auto">
+                      {[0,1,2,3,4,5,6].map((d) => {
+                        const count   = allRE.filter((re) => re.day_of_week === d).length;
+                        const isActive = selDay === d;
+                        return (
+                          <button
+                            key={d}
+                            onClick={() => setDayForRoutine(r.id, d)}
+                            className={[
+                              'flex shrink-0 flex-col items-center gap-0.5 rounded-md px-3 py-2 transition-colors',
+                              isActive
+                                ? 'bg-energy/10 text-energy'
+                                : 'text-muted-foreground hover:bg-secondary',
+                            ].join(' ')}
+                          >
+                            <span className="font-display text-base leading-none">{DAYS[d]}</span>
+                            <span className="font-label text-[9px]">
+                              {count > 0 ? `${count} ej.` : 'Desc.'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* ejercicios del día */}
+                    <div>
+                      <p className="mb-3 font-label text-[11px] text-energy">
+                        {DAYS_FULL[selDay]}
+                      </p>
+                      {dayRE.length === 0 ? (
+                        <div className="rounded-md border border-dashed border-border bg-secondary px-4 py-8 text-center">
+                          <p className="text-sm text-muted-foreground">Día de descanso</p>
+                        </div>
+                      ) : (
+                        <ul className="divide-y divide-border">
+                          {dayRE.map((re, i) => (
+                            <li
+                              key={re.id}
+                              className="flex items-center gap-3 py-2.5"
+                            >
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-energy/10 font-label text-[9px] text-energy">
+                                {i + 1}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground">
+                                  {re.exercise?.name ?? `Ejercicio #${re.exercise_id}`}
+                                </p>
+                                {re.exercise?.muscle_group && (
+                                  <p className="font-label text-[10px] text-muted-foreground">
+                                    {re.exercise.muscle_group}
+                                  </p>
+                                )}
+                              </div>
+                              <span className="shrink-0 rounded-full border border-border bg-secondary px-2.5 py-1 font-label text-[10px] tabular-nums text-foreground">
+                                {re.sets} × {re.reps}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>

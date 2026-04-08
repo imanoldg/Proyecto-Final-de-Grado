@@ -4,96 +4,245 @@ import { getRoutines } from '../../api/routines.api.ts';
 import { getAppointments } from '../../api/appointments.api.ts';
 import { getOrders } from '../../api/orders.api.ts';
 import { useAuthStore } from '../../store/auth.store';
-import { Users, ClipboardList, CalendarDays, ShoppingCart } from 'lucide-react';
+import {
+  Users,
+  ClipboardList,
+  CalendarDays,
+  ShoppingCart,
+} from 'lucide-react';
+
+type Appointment = {
+  id: number;
+  datetime: string;
+  duration_min: number;
+  status: string;
+  client_id?: number;
+  client?: { name?: string };
+};
+
+type Order = {
+  id: number;
+  total: number;
+  status: string;
+  client_id?: number;
+  client?: { name?: string };
+};
 
 export default function TrainerDashboard() {
-  type Appointment = {
-    id: number;
-    datetime: string;
-    duration_min: number;
-    status: string;
-    client_id?: number;
-    client?: { name?: string };
-  };
-
   const { user } = useAuthStore();
-  const { data: clients = [] }      = useQuery({ queryKey: ['clients'],      queryFn: getClients });
-  const { data: routines = [] }     = useQuery({ queryKey: ['routines'],     queryFn: getRoutines });
-  const { data: appointments = [] } = useQuery<Appointment[]>({ queryKey: ['appointments'], queryFn: getAppointments });
-  const { data: orders = [] }       = useQuery({ queryKey: ['orders'],       queryFn: getOrders });
 
-  const todayAppts  = appointments.filter(a => new Date(a.datetime).toDateString() === new Date().toDateString());
-  const pendingOrds = orders.filter(o => o.status === 'pending');
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients'],
+    queryFn: getClients,
+  });
+
+  const { data: routines = [] } = useQuery({
+    queryKey: ['routines'],
+    queryFn: getRoutines,
+  });
+
+  const { data: appointments = [] } = useQuery<Appointment[]>({
+    queryKey: ['appointments'],
+    queryFn: getAppointments,
+  });
+
+  const { data: orders = [] } = useQuery<Order[]>({
+    queryKey: ['orders'],
+    queryFn: getOrders,
+  });
+
+  const todayAppts = appointments.filter(
+    (a) => new Date(a.datetime).toDateString() === new Date().toDateString()
+  );
+
+  const pendingOrds = orders.filter((o) => o.status === 'pending');
 
   const stats = [
-    { label: 'Clientes activos',    value: clients.length,       icon: Users,         color: 'text-blue-600' },
-    { label: 'Rutinas creadas',     value: routines.length,      icon: ClipboardList, color: 'text-emerald-600' },
-    { label: 'Citas hoy',           value: todayAppts.length,    icon: CalendarDays,  color: 'text-amber-600' },
-    { label: 'Pedidos pendientes',  value: pendingOrds.length,   icon: ShoppingCart,  color: 'text-red-500' },
+    {
+      label: 'Clientes activos',
+      value: clients.length,
+      icon: Users,
+      iconWrapClass: 'bg-primary/12 text-primary border border-primary/15',
+    },
+    {
+      label: 'Rutinas creadas',
+      value: routines.length,
+      icon: ClipboardList,
+      iconWrapClass: 'bg-energy/12 text-energy border border-energy/15',
+    },
+    {
+      label: 'Citas hoy',
+      value: todayAppts.length,
+      icon: CalendarDays,
+      iconWrapClass:
+        'bg-achievement/12 text-achievement border border-achievement/15',
+    },
+    {
+      label: 'Pedidos pendientes',
+      value: pendingOrds.length,
+      icon: ShoppingCart,
+      iconWrapClass: 'bg-primary/12 text-primary border border-primary/15',
+    },
   ];
 
-  const statusLabel = (s: string) => ({ confirmed: 'Confirmada', cancelled: 'Cancelada', pending: 'Pendiente' }[s] ?? s);
+  const statusLabel = (s: string) =>
+    (
+      {
+        confirmed: 'Confirmada',
+        cancelled: 'Cancelada',
+        pending: 'Pendiente',
+      } as const
+    )[s as 'confirmed' | 'cancelled' | 'pending'] ?? s;
+
+  const statusClass = (s: string) =>
+    ({
+      confirmed: 'bg-green-500/12 text-green-400 border border-green-500/15',
+      cancelled: 'bg-primary/12 text-primary border border-primary/15',
+      pending:
+        'bg-achievement/12 text-achievement border border-achievement/15',
+    }[s] ?? 'bg-muted text-muted-foreground border border-border');
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Hola, {user?.name} 👋</h1>
-        <p className="text-sm text-muted-foreground">Resumen de hoy</p>
-      </div>
+    <div className="space-y-6 bg-background text-foreground">
+      <section className="rounded-lg border border-border bg-card px-5 py-5 md:px-6 md:py-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-1.5">
+            <span className="font-label text-xs text-primary">
+              Dashboard del entrenador
+            </span>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <Icon className={`w-4 h-4 ${color}`} />
-            </div>
-            <p className="text-2xl font-semibold tabular-nums">{value}</p>
+            <h1 className="font-display text-4xl leading-none tracking-[0.04em] md:text-5xl">
+              Hola, {user?.name}
+            </h1>
+
+            <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+              Vista general de clientes, rutinas, citas y pedidos del día.
+            </p>
           </div>
-        ))}
-      </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h2 className="text-base font-semibold mb-3">Citas de hoy</h2>
+          <div className="rounded-lg border border-primary/15 bg-primary/10 px-4 py-3">
+            <p className="font-label text-[11px] text-primary">Estado diario</p>
+            <p className="font-sans text-sm text-foreground">
+              {todayAppts.length} citas programadas · {pendingOrds.length} pedidos pendientes
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map(({ label, value, icon: Icon, iconWrapClass }) => (
+          <article
+            key={label}
+            className="rounded-lg border border-border bg-card p-4 transition-colors hover:bg-secondary"
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="font-label text-[11px] text-muted-foreground">
+                  {label}
+                </p>
+              </div>
+
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-md ${iconWrapClass}`}
+              >
+                <Icon className="h-4 w-4" />
+              </div>
+            </div>
+
+            <p className="font-display text-4xl leading-none tracking-[0.03em] tabular-nums text-foreground">
+              {value}
+            </p>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <article className="rounded-lg border border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="font-label text-[11px] text-energy">Agenda</p>
+              <h2 className="font-display text-3xl leading-none tracking-[0.03em]">
+                Citas de hoy
+              </h2>
+            </div>
+          </div>
+
           {todayAppts.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">Sin citas hoy</p>
+            <div className="rounded-md border border-dashed border-border bg-secondary px-4 py-8 text-center">
+              <p className="text-sm text-muted-foreground">Sin citas hoy</p>
+            </div>
           ) : (
             <ul className="divide-y divide-border">
-              {todayAppts.map(a => (
-                <li key={a.id} className="flex justify-between items-center py-2.5">
-                  <div>
-                    <p className="text-sm font-medium">{a.client?.name ?? `Cliente #${a.client_id}`}</p>
+              {todayAppts.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between gap-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {a.client?.name ?? `Cliente #${a.client_id}`}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(a.datetime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} · {a.duration_min}min
+                      {new Date(a.datetime).toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}{' '}
+                      · {a.duration_min} min
                     </p>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{statusLabel(a.status)}</span>
+
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 font-label text-[10px] ${statusClass(a.status)}`}
+                  >
+                    {statusLabel(a.status)}
+                  </span>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </article>
 
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h2 className="text-base font-semibold mb-3">Pedidos pendientes</h2>
+        <article className="rounded-lg border border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="font-label text-[11px] text-achievement">Ventas</p>
+              <h2 className="font-display text-3xl leading-none tracking-[0.03em]">
+                Pedidos pendientes
+              </h2>
+            </div>
+          </div>
+
           {pendingOrds.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No hay pedidos pendientes</p>
+            <div className="rounded-md border border-dashed border-border bg-secondary px-4 py-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                No hay pedidos pendientes
+              </p>
+            </div>
           ) : (
             <ul className="divide-y divide-border">
-              {pendingOrds.slice(0, 5).map(o => (
-                <li key={o.id} className="flex justify-between items-center py-2.5">
-                  <div>
-                    <p className="text-sm font-medium">{o.client?.name ?? `Cliente #${o.client_id}`}</p>
-                    <p className="text-xs text-muted-foreground">Pedido #{o.id}</p>
+              {pendingOrds.slice(0, 5).map((o) => (
+                <li
+                  key={o.id}
+                  className="flex items-center justify-between gap-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {o.client?.name ?? `Cliente #${o.client_id}`}
+                    </p>
+                    <p className="font-label text-[10px] text-muted-foreground">
+                      Pedido #{o.id}
+                    </p>
                   </div>
-                  <p className="text-sm font-medium tabular-nums">{o.total.toFixed(2)} €</p>
+
+                  <p className="font-display text-2xl leading-none tracking-[0.03em] tabular-nums text-foreground">
+                    {o.total.toFixed(2)} €
+                  </p>
                 </li>
               ))}
             </ul>
           )}
-        </div>
-      </div>
+        </article>
+      </section>
     </div>
   );
 }

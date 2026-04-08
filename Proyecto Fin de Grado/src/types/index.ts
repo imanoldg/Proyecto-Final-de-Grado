@@ -17,22 +17,30 @@ export interface Exercise {
 }
 
 export interface RoutineExercise {
+  id: number;
   exercise_id: number;
-  exercise?: Exercise;
-  sets?: number;
-  reps?: string;
-  rest_seconds?: number;
-  notes?: string;
-  order?: number;
-}
+  sets: number;
+  reps: number;
+  rest_seconds?: number | null;
+  notes?: string | null;
+  order?: number | null;
+  day_of_week: number | null;           // 0=Lun … 6=Dom, null = sin día
+  exercise?: {
+    id: number;
+    name: string;
+    muscle_group: string;
+    description?: string;
+  };
+};
 
 export interface Routine {
   id: number;
   name: string;
   description?: string;
   trainer_id: number;
-  exercises?: RoutineExercise[];
-}
+  assigned_client_id?: number | null;
+  routine_exercises: RoutineExercise[];
+};
 
 export interface Assignment {
   id: number;
@@ -58,15 +66,11 @@ export interface Appointment {
   notes?: string;
 }
 
+
 export interface NutritionLog {
-  id: number;
-  client_id: number;
-  date: string;
-  meal: string;
-  food: string;
-  calories?: number;
-  notes?: string;
-}
+  id: number; food_name: string; grams: number;
+  calories: number; protein: number; carbs: number; fat: number; date: string;
+};
 
 export interface InventoryItem {
   id: number;
@@ -95,5 +99,5 @@ export interface Order {
   total: number;
   notes?: string;
   items?: OrderItem[];
-  created_at?: string;
+  createdAt?: string;
 }

@@ -1,15 +1,26 @@
 import api from './axios';
 import type { NutritionLog } from '../types';
-
-export const getNutritionLogs = async (
-  date?: string
-): Promise<NutritionLog[]> =>
-  (await api.get('/nutrition', { params: date ? { date } : {} })).data;
-
-export const createNutritionLog = async (
-  data: Partial<NutritionLog>
-): Promise<NutritionLog> => (await api.post('/nutrition', data)).data;
-
-export const deleteNutritionLog = async (id: number): Promise<void> => {
-  await api.delete(`/nutrition/${id}`);
+export type FoodResult = {
+  fdcId: number; name: string;
+  calories: number; protein: number; carbs: number; fat: number;
 };
+// ─── Búsqueda con USDA (via proxy backend) ───────────────────────────────────
+export const searchFood = (q: string): Promise<FoodResult[]> =>
+  api.get('/nutrition/search', { params: { q } }).then((r) => r.data);
+
+// ─── Registro del día ────────────────────────────────────────────────────────
+export const getNutritionLogs = (): Promise<NutritionLog[]> =>
+  api.get('/nutrition').then((r) => r.data);
+
+export const getNutritionHistory = (date?: string): Promise<NutritionLog[]> =>
+  api.get('/nutrition/history', { params: date ? { date } : {} }).then((r) => r.data);
+
+export const addNutritionLog = (data: {
+  food_name: string; grams: number;
+  calories: number; protein: number; carbs: number; fat: number;
+  date?: string;
+}): Promise<NutritionLog> =>
+  api.post('/nutrition', data).then((r) => r.data);
+
+export const deleteNutritionLog = (id: number): Promise<void> =>
+  api.delete(`/nutrition/${id}`).then((r) => r.data);

@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/auth.store';
 
 const Logo = () => (
   <svg width="44" height="44" viewBox="0 0 30 30" fill="none" aria-label="GymApp">
-    <rect width="30" height="30" rx="7" fill="#01696f" />
+    <rect width="30" height="30" rx="7" fill="rgb(232, 56, 79)" />
     <path d="M7 15h5M18 15h5M12 10v10M18 10v10"
       stroke="white" strokeWidth="2.2" strokeLinecap="round" />
   </svg>

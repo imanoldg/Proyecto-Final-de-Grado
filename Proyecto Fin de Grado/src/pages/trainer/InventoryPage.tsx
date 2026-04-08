@@ -15,14 +15,27 @@ interface FormState {
   stock: string;
 }
 
+const CATEGORY_OPTIONS = [
+  { value: 'suplementacion', label: 'Suplementación' },
+  { value: 'proteina', label: 'Proteína' },
+  { value: 'creatina', label: 'Creatina' },
+  { value: 'preentreno', label: 'Preentreno' },
+  { value: 'vitaminas', label: 'Vitaminas' },
+  { value: 'snacks', label: 'Snacks saludables' },
+  { value: 'bebidas', label: 'Bebidas' },
+  { value: 'equipamiento', label: 'Equipamiento' },
+  { value: 'accesorios', label: 'Accesorios' },
+  { value: 'otros', label: 'Otros' },
+];
+
 const emptyForm: FormState = { name: '', category: '', price: '', stock: '' };
 
 export default function InventoryPage() {
   const qc = useQueryClient();
-  const [search, setSearch]     = useState('');
-  const [open, setOpen]         = useState(false);
-  const [form, setForm]         = useState<FormState>(emptyForm);
-  const [formErr, setFormErr]   = useState('');
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const [formErr, setFormErr] = useState('');
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['inventory'],
@@ -35,6 +48,7 @@ export default function InventoryPage() {
       qc.invalidateQueries({ queryKey: ['inventory'] });
       setOpen(false);
       setForm(emptyForm);
+      setFormErr('');
     },
   });
 
@@ -51,11 +65,15 @@ export default function InventoryPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormErr('');
+
     if (!form.name) return setFormErr('El nombre es obligatorio');
+
     const price = parseFloat(form.price);
     const stock = parseInt(form.stock, 10);
+
     if (isNaN(price) || price < 0) return setFormErr('Introduce un precio válido');
     if (isNaN(stock) || stock < 0) return setFormErr('Introduce un stock válido');
+
     createMut.mutate({
       name: form.name,
       category: form.category || undefined,
@@ -67,9 +85,11 @@ export default function InventoryPage() {
 
   const lowStock = items.filter(i => i.stock <= 5 && i.active);
 
+  const getCategoryLabel = (value?: string | null) =>
+    CATEGORY_OPTIONS.find(option => option.value === value)?.label ?? value ?? 'â€”';
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold">Inventario</h1>
@@ -84,7 +104,6 @@ export default function InventoryPage() {
         </button>
       </div>
 
-      {/* Low stock warning */}
       {lowStock.length > 0 && (
         <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-400">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -95,7 +114,6 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
@@ -106,7 +124,6 @@ export default function InventoryPage() {
         />
       </div>
 
-      {/* Table */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -124,7 +141,7 @@ export default function InventoryPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/50">
                 <tr>
-                  {['Nombre','Categoría','Precio','Stock','Estado',''].map(h => (
+                  {['Nombre', 'Categoría', 'Precio', 'Stock', 'Estado', ''].map(h => (
                     <th key={h} className={`px-4 py-3 font-medium text-muted-foreground ${h ? 'text-left' : ''}`}>
                       {h}
                     </th>
@@ -144,9 +161,9 @@ export default function InventoryPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {item.category ? (
                         <span className="text-xs px-2 py-0.5 bg-muted rounded-full">
-                          {item.category}
+                          {getCategoryLabel(item.category)}
                         </span>
-                      ) : '—'}
+                      ) : 'â€”'}
                     </td>
                     <td className="px-4 py-3 tabular-nums">{item.price.toFixed(2)} €</td>
                     <td className="px-4 py-3 tabular-nums">
@@ -161,7 +178,7 @@ export default function InventoryPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => { if (confirm(`¿Eliminar "${item.name}"?`)) deleteMut.mutate(item.id); }}
+                        onClick={() => { if (confirm(`Â¿Eliminar "${item.name}"?`)) deleteMut.mutate(item.id); }}
                         className="p-1.5 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -175,10 +192,9 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* Create modal */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 backdrop-blur-sm bg-background/80">
+          <div className="bg-card border rounded-xl p-6 w-full max-w-md shadow-lg">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-semibold">Añadir producto</h2>
               <button onClick={() => { setOpen(false); setForm(emptyForm); setFormErr(''); }}>
@@ -192,24 +208,30 @@ export default function InventoryPage() {
                 <input
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="Proteína whey, Creatina..."
+                  placeholder="Proteí­na whey, Creatina..."
                   className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Categoría</label>
-                <input
+                <select
                   value={form.category}
                   onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                  placeholder="Suplemento, Equipamiento..."
                   className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+                >
+                  <option value="">Selecciona una categoría</option>
+                  {CATEGORY_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Precio (€) *</label>
+                  <label className="text-sm font-medium">Precio €</label>
                   <input
                     type="number"
                     min="0"

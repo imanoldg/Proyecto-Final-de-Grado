@@ -1,91 +1,172 @@
 import { useQuery } from '@tanstack/react-query';
 import { getMyAssignments } from '../../api/routines.api.ts';
 import { getAppointments } from '../../api/appointments.api.ts';
-import { getNutritionLogs } from '../../api/nutrition.api.ts';
 import { useAuthStore } from '../../store/auth.store';
-import { ClipboardList, CalendarDays, UtensilsCrossed } from 'lucide-react';
+import { Dumbbell, CalendarDays, Flame } from 'lucide-react';
+import type { Routine } from '../../types/index.ts';
+
+type Appointment = {
+  id: number; datetime: string; duration_min: number;
+  status: string;
+};
+
+const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 export default function ClientDashboard() {
   const { user } = useAuthStore();
-  const today = new Date().toISOString().split('T')[0];
 
-  interface Assignment {
-    id: number | string;
-    active?: boolean;
-    routine?: { name?: string } | null;
-    routine_id?: number | string;
-  }
+  const { data: routines = [] } = useQuery<Routine[]>({
+    queryKey: ['my-assignments'],
+    queryFn: getMyAssignments,
+  });
 
-  interface Appointment {
-    id: number | string;
-    datetime: string;
-    duration_min?: number;
-    status?: string;
-  }
+  const { data: appointments = [] } = useQuery<Appointment[]>({
+    queryKey: ['appointments'],
+    queryFn: getAppointments,
+  });
 
-  interface NutritionLog {
-    calories?: number;
-  }
+  const upcoming = appointments
+    .filter((a) => a.status !== 'cancelled' && new Date(a.datetime) >= new Date())
+    .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
 
-  const { data: assignments = [] } = useQuery<Assignment[]>({ queryKey: ['my-assignments'], queryFn: getMyAssignments });
-  const { data: appointments = [] } = useQuery<Appointment[]>({ queryKey: ['appointments'], queryFn: getAppointments });
-  const { data: logs = [] } = useQuery<NutritionLog[]>({ queryKey: ['nutrition', today], queryFn: () => getNutritionLogs(today) });
+  const fmtDate = (d: string) =>
+    new Date(d).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+  const fmtTime = (d: string) =>
+    new Date(d).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
-  const activeRoutines = assignments.filter(a => a.active);
-  const upcoming = appointments.filter(a => new Date(a.datetime) > new Date()).sort((a, b) => +new Date(a.datetime) - +new Date(b.datetime));
-  const totalCal = logs.reduce((s, l) => s + (l.calories ?? 0), 0);
+  const stats = [
+    {
+      label: 'Rutinas activas', value: routines.length,
+      icon: Dumbbell, color: 'text-energy', wrap: 'bg-energy/10 border-energy/15',
+    },
+    {
+      label: 'Próximas citas', value: upcoming.length,
+      icon: CalendarDays, color: 'text-achievement', wrap: 'bg-achievement/10 border-achievement/15',
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Hola, {user?.name} 💪</h1>
-        <p className="text-sm text-muted-foreground">Tu resumen de hoy</p>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: 'Rutinas activas', value: activeRoutines.length, icon: ClipboardList, bg: 'bg-primary/10', color: 'text-primary' },
-          { label: 'Próximas citas', value: upcoming.length, icon: CalendarDays, bg: 'bg-amber-100 dark:bg-amber-950/40', color: 'text-amber-600' },
-          { label: 'Kcal hoy', value: Math.round(totalCal), icon: UtensilsCrossed, bg: 'bg-emerald-100 dark:bg-emerald-950/40', color: 'text-emerald-600' },
-        ].map(({ label, value, icon: Icon, bg, color }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-4 flex items-center gap-4">
-            <div className={`p-2.5 rounded-lg ${bg}`}><Icon className={`w-5 h-5 ${color}`} /></div>
-            <div><p className="text-xs text-muted-foreground">{label}</p><p className="text-2xl font-semibold tabular-nums">{value}</p></div>
+      {/* ── Hero ── */}
+      <section className="rounded-lg border border-border bg-card px-5 py-5 md:px-6 md:py-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-1.5">
+            <span className="font-label text-xs text-primary">Panel del cliente</span>
+            <h1 className="font-display text-4xl leading-none tracking-[0.04em] md:text-5xl">
+              Hola, {user?.name}
+            </h1>
+            <p className="text-sm text-muted-foreground">Tu resumen de hoy</p>
           </div>
+          <div className="flex items-center gap-2 rounded-lg border border-energy/15 bg-energy/10 px-4 py-3">
+            <Flame className="h-4 w-4 text-energy" />
+            <p className="font-label text-xs text-energy">
+              {routines.length > 0 ? '¡Sigue así, vas genial!' : 'Sin rutinas activas aún'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats ── */}
+      <div className="grid grid-cols-2 gap-4">
+        {stats.map(({ label, value, icon: Icon, color, wrap }) => (
+          <article key={label} className="rounded-lg border border-border bg-card p-4 transition-colors hover:bg-secondary">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <p className="font-label text-[11px] text-muted-foreground">{label}</p>
+              <div className={`flex h-9 w-9 items-center justify-center rounded-md border ${wrap}`}>
+                <Icon className={`h-4 w-4 ${color}`} />
+              </div>
+            </div>
+            <p className={`font-display text-4xl leading-none tracking-[0.03em] tabular-nums ${color}`}>
+              {value}
+            </p>
+          </article>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h2 className="font-semibold text-sm mb-3">Mis rutinas activas</h2>
-          {activeRoutines.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Sin rutinas asignadas</p> : (
-            <ul className="divide-y divide-border">
-              {activeRoutines.map(a => (
-                <li key={a.id} className="flex justify-between items-center py-2.5">
-                  <p className="text-sm font-medium">{a.routine?.name ?? `Rutina #${a.routine_id}`}</p>
-                  <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">Activa</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      <div className="grid gap-4 lg:grid-cols-2">
 
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h2 className="font-semibold text-sm mb-3">Próximas citas</h2>
-          {upcoming.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Sin citas programadas</p> : (
+        {/* ── Mis rutinas ── */}
+        <article className="rounded-lg border border-border bg-card p-5">
+          <div className="mb-4">
+            <p className="font-label text-[11px] text-energy">Entrenamiento</p>
+            <h2 className="font-display text-3xl leading-none tracking-[0.03em]">Mis rutinas</h2>
+          </div>
+
+          {routines.length === 0 ? (
+            <div className="rounded-md border border-dashed border-border bg-secondary px-4 py-8 text-center">
+              <Dumbbell className="mx-auto mb-2 h-6 w-6 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Sin rutinas asignadas</p>
+            </div>
+          ) : (
             <ul className="divide-y divide-border">
-              {upcoming.slice(0, 3).map(a => (
-                <li key={a.id} className="flex justify-between items-center py-2.5">
-                  <div>
-                    <p className="text-sm font-medium">{new Date(a.datetime).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(a.datetime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} · {a.duration_min}min</p>
+              {routines.map((r) => {
+                const allRE = r.routine_exercises ?? [];
+                const daysWithEx = new Set(
+                  allRE
+                    .filter((re) => re.day_of_week !== null && re.day_of_week !== undefined)
+                    .map((re) => re.day_of_week as number),
+                );
+
+                return (
+                  <li key={r.id} className="py-3">
+                    <div className="mb-1.5 flex items-center justify-between gap-3">
+                      <p className="truncate text-sm font-medium text-foreground">{r.name}</p>
+                      <span className="shrink-0 rounded-full border border-energy/15 bg-energy/10 px-2.5 py-0.5 font-label text-[10px] text-energy">
+                        Activa
+                      </span>
+                    </div>
+                    {/* mini barra días */}
+                    <div className="flex gap-1">
+                      {[0,1,2,3,4,5,6].map((d) => (
+                        <span
+                          key={d}
+                          className={[
+                            'flex h-4 w-6 items-center justify-center rounded font-label text-[9px]',
+                            daysWithEx.has(d)
+                              ? 'bg-energy/15 text-energy'
+                              : 'bg-secondary text-muted-foreground/30',
+                          ].join(' ')}
+                        >
+                          {DAYS[d]}
+                        </span>
+                      ))}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </article>
+
+        {/* ── Próximas citas ── */}
+        <article className="rounded-lg border border-border bg-card p-5">
+          <div className="mb-4">
+            <p className="font-label text-[11px] text-achievement">Agenda</p>
+            <h2 className="font-display text-3xl leading-none tracking-[0.03em]">Próximas citas</h2>
+          </div>
+
+          {upcoming.length === 0 ? (
+            <div className="rounded-md border border-dashed border-border bg-secondary px-4 py-8 text-center">
+              <CalendarDays className="mx-auto mb-2 h-6 w-6 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Sin citas programadas</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {upcoming.slice(0, 4).map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground capitalize">{fmtDate(a.datetime)}</p>
+                    <p className="text-xs text-muted-foreground">{fmtTime(a.datetime)} · {a.duration_min} min</p>
                   </div>
-                  <span className="text-xs px-2 py-0.5 bg-muted rounded-full">{a.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</span>
+                  <span className="shrink-0 rounded-full border border-achievement/15 bg-achievement/10 px-2.5 py-1 font-label text-[10px] text-achievement">
+                    {a.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
+                  </span>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </article>
       </div>
     </div>
   );
