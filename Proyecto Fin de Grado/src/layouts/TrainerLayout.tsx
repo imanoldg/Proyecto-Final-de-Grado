@@ -3,23 +3,29 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth.store';
 import {
   LayoutDashboard, Users, Dumbbell, ClipboardList,
-  Package, ShoppingCart, LogOut, Menu, X,
+  Package, ShoppingCart, LogOut, Menu, X, CalendarDays,
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/trainer/dashboard',  icon: LayoutDashboard, label: 'Dashboard'  },
-  { to: '/trainer/clients',    icon: Users,            label: 'Clientes'   },
-  { to: '/trainer/routines',   icon: ClipboardList,    label: 'Rutinas'    },
-  { to: '/trainer/exercises',  icon: Dumbbell,         label: 'Ejercicios' },
-  { to: '/trainer/inventory',  icon: Package,          label: 'Inventario' },
-  { to: '/trainer/orders',     icon: ShoppingCart,     label: 'Pedidos'    },
+  { to: '/trainer/dashboard',    icon: LayoutDashboard, label: 'Dashboard'  },
+  { to: '/trainer/clients',      icon: Users,            label: 'Clientes'   },
+  { to: '/trainer/routines',     icon: ClipboardList,    label: 'Rutinas'    },
+  { to: '/trainer/exercises',    icon: Dumbbell,         label: 'Ejercicios' },
+  { to: '/trainer/inventory',    icon: Package,          label: 'Inventario' },
+  { to: '/trainer/orders',       icon: ShoppingCart,     label: 'Pedidos'    },
+  { to: '/trainer/appointments', icon: CalendarDays,     label: 'Citas'    },
 ];
 
 const Logo = () => (
-  <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-label="GymApp">
-    <rect width="30" height="30" rx="7" fill="rgb(232, 56, 79)" />
-    <path d="M7 15h5M18 15h5M12 10v10M18 10v10"
-      stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+  <svg width="50" height="50" viewBox="0 0 50 50" fill="none" aria-label="GymApp">
+    <rect width="50" height="50" rx="10" fill="rgb(232, 56, 79)" />
+    <image
+      href="/helmet.png"
+      x="5"
+      y="5"
+      width="40"
+      height="40"
+    />
   </svg>
 );
 

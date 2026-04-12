@@ -15,34 +15,16 @@ const navItems = [
 ];
 
 const Logo = () => (
-  <svg width="200" height="200" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="30" height="30" rx="7" fill="#1C1C23"/>
-
-  <path
-    fill="rgb(232,56,79)"
-    d="M21 9
-       C23 3 17 -1 12 1
-       C7 3 5 8 7 11
-       C8 13 11 13 12 10
-       C13 7 15 2 18 3
-       C20 4 22 7 20 11
-       Z"
-  />
-  
-  <path
-    fill="white"
-    fill-rule="evenodd"
-    d="M10 27
-       C6 26 5 22 5 17
-       L5 13
-       C6 10 9 8 12 8
-       C16 7 22 9 23 15
-       C24 19 23 24 20 27
-       C18 29 13 29 10 27
-       Z
-       M5 13 L14 11 L14 15 L10 16 L10 23 L8 23 L8 16 L5 16 Z"
-  />
-</svg>
+  <svg width="50" height="50" viewBox="0 0 50 50" fill="none" aria-label="GymApp">
+    <rect width="50" height="50" rx="10" fill="rgb(232, 56, 79)" />
+    <image
+      href="/helmet.png"
+      x="5"
+      y="5"
+      width="40"
+      height="40"
+    />
+  </svg>
 );
 
 export default function ClientLayout() {

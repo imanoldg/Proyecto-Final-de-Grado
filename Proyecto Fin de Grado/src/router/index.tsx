@@ -16,6 +16,7 @@ import AppointmentsPage from '../pages/client/AppointmentsPage.tsx';
 import ClientOrdersPage from '../pages/client/OrdersPage.tsx';
 import LoginPage from '../pages/LoginPage.tsx';
 import RegisterPage from '../pages/RegisterPage.tsx';
+import TrainerAppointmentsPage from '../pages/trainer/TrainerAppointmentsPage.tsx';
 
 export const router = createBrowserRouter([
   { path: '/',         element: <Navigate to="/login" replace /> },
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: 'exercises',         element: <ExercisesPage /> },
       { path: 'inventory',         element: <InventoryPage /> },
       { path: 'orders',            element: <OrdersPage /> },
+      { path: 'appointments',      element: <TrainerAppointmentsPage /> },
     ],
   },
 

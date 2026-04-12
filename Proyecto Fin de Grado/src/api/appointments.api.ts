@@ -16,7 +16,7 @@ export const createAppointment = async (data: {
 };
 
 export const updateAppointmentStatus = async (id: number, status: string) => {
-  const res = await api.patch(`/appointments/${id}/status`, { status });
+  const res = await api.patch(`/appointments/${id}`, { status });
   return res.data;
 };
 

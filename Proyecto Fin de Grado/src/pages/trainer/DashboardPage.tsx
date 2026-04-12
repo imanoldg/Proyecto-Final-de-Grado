@@ -44,16 +44,24 @@ export default function TrainerDashboard() {
   const { data: appointments = [] } = useQuery<Appointment[]>({
     queryKey: ['appointments'],
     queryFn: getAppointments,
+    refetchInterval: 30_000,
   });
 
   const { data: orders = [] } = useQuery<Order[]>({
     queryKey: ['orders'],
     queryFn: getOrders,
+    refetchInterval: 30_000,
   });
 
-  const todayAppts = appointments.filter(
-    (a) => new Date(a.datetime).toDateString() === new Date().toDateString()
-  );
+  const todayAppts = appointments.filter((a) => {
+    const apptDate = new Date(a.datetime);
+    const today = new Date();
+    return (
+      apptDate.getFullYear() === today.getFullYear() &&
+      apptDate.getMonth() === today.getMonth() &&
+      apptDate.getDate() === today.getDate()
+    );
+  });
 
   const pendingOrds = orders.filter((o) => o.status === 'pending');
 

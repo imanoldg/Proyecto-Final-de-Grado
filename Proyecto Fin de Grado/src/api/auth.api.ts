@@ -18,10 +18,14 @@ export const login = async (
 ): Promise<{ token: string; user: User }> => (await api.post('/auth/login', data)).data;
 
 export const register = async (data: {
-  name: string; email: string; password: string; role: string;
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  trainer_id?: number;
 }) => {
   const res = await api.post('/auth/register', data);
-  return res.data; // { token, user }
+  return res.data;
 };
 
 export const getMe = async (): Promise<User> => (await api.get('/auth/me')).data;
