@@ -6,10 +6,15 @@ import { useAuthStore } from '../store/auth.store';
 import { Search, Check } from 'lucide-react';
 
 const Logo = () => (
-  <svg width="44" height="44" viewBox="0 0 30 30" fill="none" aria-label="GymApp">
-    <rect width="30" height="30" rx="7" fill="rgb(232, 56, 79)" />
-    <path d="M7 15h5M18 15h5M12 10v10M18 10v10"
-      stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+  <svg width="50" height="50" viewBox="0 0 50 50" fill="none" aria-label="GymApp">
+    <rect width="50" height="50" rx="10" fill="rgb(232, 56, 79)" />
+    <image
+      href="/helmet.png"
+      x="5"
+      y="5"
+      width="40"
+      height="40"
+    />
   </svg>
 );
 
