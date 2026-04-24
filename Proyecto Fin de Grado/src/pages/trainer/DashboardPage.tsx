@@ -1,12 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { getClients } from '../../api/users.api.ts';
-import { getRoutines } from '../../api/routines.api.ts';
 import { getAppointments } from '../../api/appointments.api.ts';
 import { getOrders } from '../../api/orders.api.ts';
 import { useAuthStore } from '../../store/auth.store';
 import {
   Users,
-  ClipboardList,
   CalendarDays,
   ShoppingCart,
 } from 'lucide-react';
@@ -36,10 +34,6 @@ export default function TrainerDashboard() {
     queryFn: getClients,
   });
 
-  const { data: routines = [] } = useQuery({
-    queryKey: ['routines'],
-    queryFn: getRoutines,
-  });
 
   const { data: appointments = [] } = useQuery<Appointment[]>({
     queryKey: ['appointments'],
@@ -71,12 +65,6 @@ export default function TrainerDashboard() {
       value: clients.length,
       icon: Users,
       iconWrapClass: 'bg-primary/12 text-primary border border-primary/15',
-    },
-    {
-      label: 'Rutinas creadas',
-      value: routines.length,
-      icon: ClipboardList,
-      iconWrapClass: 'bg-energy/12 text-energy border border-energy/15',
     },
     {
       label: 'Citas hoy',
@@ -128,16 +116,10 @@ export default function TrainerDashboard() {
             </p>
           </div>
 
-          <div className="rounded-lg border border-primary/15 bg-primary/10 px-4 py-3">
-            <p className="font-label text-[11px] text-primary">Estado diario</p>
-            <p className="font-sans text-sm text-foreground">
-              {todayAppts.length} citas programadas · {pendingOrds.length} pedidos pendientes
-            </p>
-          </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {stats.map(({ label, value, icon: Icon, iconWrapClass }) => (
           <article
             key={label}
