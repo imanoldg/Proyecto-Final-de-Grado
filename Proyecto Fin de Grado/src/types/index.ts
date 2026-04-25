@@ -1,4 +1,4 @@
-export type UserRole = 'trainer' | 'client';
+export type UserRole = 'trainer' | 'client' | 'admin';
 
 export interface User {
   id: number;
@@ -100,4 +100,13 @@ export interface Order {
   notes?: string;
   items?: OrderItem[];
   createdAt?: string;
+}
+
+export interface CreateClientPayload {
+  name: string;
+  email: string;
+  password: string;
+  role?: string;
+  trainer_id?: number;
+  active?: boolean;
 }

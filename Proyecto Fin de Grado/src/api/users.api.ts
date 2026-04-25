@@ -1,11 +1,11 @@
 import api from './axios';
-import type { User } from '../types';
+import type { User, CreateClientPayload } from '../types';
 
 export const getClients = async (): Promise<User[]> =>
   (await api.get('/users?role=client')).data;
 
 export const createClient = async (
-  data: Omit<User, 'id'> & { password: string }
+  data: CreateClientPayload
 ): Promise<User> => (await api.post('/users', data)).data;
 
 export const updateUser = async (
@@ -26,3 +26,4 @@ export const getUsers = async () => {
   const res = await api.get('/users');
   return res.data;
 };
+

@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth.store';
 import {
   LayoutDashboard, Users, Dumbbell, ClipboardList,
-  Package, ShoppingCart, LogOut, Menu, X, CalendarDays,
+   LogOut, Menu, X, CalendarDays,
 } from 'lucide-react';
 
 const navItems = [
@@ -11,8 +11,6 @@ const navItems = [
   { to: '/trainer/clients',      icon: Users,            label: 'Clientes'   },
   { to: '/trainer/routines',     icon: ClipboardList,    label: 'Rutinas'    },
   { to: '/trainer/exercises',    icon: Dumbbell,         label: 'Ejercicios' },
-  { to: '/trainer/inventory',    icon: Package,          label: 'Inventario' },
-  { to: '/trainer/orders',       icon: ShoppingCart,     label: 'Pedidos'    },
   { to: '/trainer/appointments', icon: CalendarDays,     label: 'Citas'    },
 ];
 

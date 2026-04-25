@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../api/auth.api';
@@ -24,17 +25,22 @@ export default function LoginPage() {
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
 
+  // ← AÑADE ESTO AQUÍ
+  const redirectMap: Record<string, string> = {
+    trainer: '/trainer/dashboard',
+    client:  '/client/dashboard',
+    admin:   '/admin/dashboard',
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
       const res = await login({ email, password });
-      setAuth(res.token, res.user);
-      navigate(
-        res.user.role === 'trainer' ? '/trainer/dashboard' : '/client/dashboard',
-        { replace: true }
-      );
+      setAuth(res.token, res.user as any);
+      // ← Y CAMBIA ESTA LÍNEA
+      navigate(redirectMap[res.user.role] ?? '/login', { replace: true });
     } catch {
       setError('Email o contraseña incorrectos. Inténtalo de nuevo.');
     } finally {
@@ -114,16 +120,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* ── Enlace a registro ── */}
-          <p className="text-center text-sm text-muted-foreground pt-1">
-            ¿No tienes cuenta?{' '}
-            <Link
-              to="/register"
-              className="font-medium text-primary hover:underline underline-offset-4"
-            >
-              Regístrate
-            </Link>
-          </p>
         </div>
 
       </div>
